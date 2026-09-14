@@ -30,10 +30,6 @@ type Config struct {
 // DefaultSpoolDir returns the standard spool directory based on the running OS.
 func DefaultSpoolDir() string {
 	if runtime.GOOS == "windows" {
-		localAppData := os.Getenv("LOCALAPPDATA")
-		if localAppData != "" {
-			return filepath.Join(localAppData, "tomcat-monitoring", "spool")
-		}
 		return `C:\monitoring\spool`
 	}
 	home := os.Getenv("HOME")

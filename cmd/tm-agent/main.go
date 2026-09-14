@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
 	"os"
@@ -115,16 +114,6 @@ func main() {
 	engineClient, err := engine.NewEngineClient(cfg.ContainerEngine, cfg.SocketPath)
 	if err != nil {
 		termutil.PrintWarning("Container engine socket initialization warning: %v", err)
-	}
-
-	// Test engine connectivity
-	if engineClient != nil {
-		info, pErr := engineClient.Ping(context.Background())
-		if pErr != nil {
-			termutil.PrintWarning("Container engine ping warning: %v (will retry during event streaming)", pErr)
-		} else {
-			termutil.PrintSuccess("Connected to container engine: %s (API: %s, OS: %s)", info.EngineType, info.APIVersion, info.OSType)
-		}
 	}
 
 	// 3. Initialize Collector

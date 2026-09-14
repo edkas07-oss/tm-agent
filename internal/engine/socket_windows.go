@@ -16,26 +16,17 @@ func createTransport(socketPath string) (*http.Transport, error) {
 		return &http.Transport{
 			DialContext: func(ctx context.Context, network, _ string) (net.Conn, error) {
 				var d net.Dialer
+				d.Timeout = 1 * time.Second
 				return d.DialContext(ctx, "tcp", addr)
 			},
 		}, nil
 	}
 
-	// Windows Named Pipes fallback
-	pipePath := socketPath
-	if !strings.HasPrefix(pipePath, `\\.\pipe\`) && !strings.HasPrefix(pipePath, `//./pipe/`) {
-		pipePath = `\\.\pipe\docker_engine`
-	}
-
 	return &http.Transport{
 		DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
 			var d net.Dialer
-			d.Timeout = 5 * time.Second
-			conn, err := net.Dial("tcp", "127.0.0.1:2375")
-			if err == nil {
-				return conn, nil
-			}
-			return d.DialContext(ctx, "tcp", "localhost:2375")
+			d.Timeout = 1 * time.Second
+			return d.DialContext(ctx, "tcp", "127.0.0.1:2375")
 		},
 	}, nil
 }

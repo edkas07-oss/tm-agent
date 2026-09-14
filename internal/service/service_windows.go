@@ -24,12 +24,13 @@ func (m *windowsService) Execute(args []string, r <-chan svc.ChangeRequest, chan
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	// Notify SCM that service is Running immediately
+	changes <- svc.Status{State: svc.Running, Accepts: cmdsAccepted}
+
 	errCh := make(chan error, 1)
 	go func() {
 		errCh <- m.collector.Run(ctx)
 	}()
-
-	changes <- svc.Status{State: svc.Running, Accepts: cmdsAccepted}
 
 loop:
 	for {
@@ -57,20 +58,16 @@ loop:
 	return
 }
 
-// RunService runs the collector daemon on Windows either as an interactive console app or as a Windows Service.
+// RunService runs the collector daemon on Windows either as a console app (interactive/SSH) or as a Windows Service.
 func RunService(c *collector.Collector) error {
-	isInteractive, err := svc.IsAnInteractiveSession()
-	if err != nil {
-		termutil.PrintWarning("Failed to determine interactive session: %v", err)
-		isInteractive = true
+	// Attempt running directly under Windows Service Control Manager (SCM)
+	err := svc.Run("TomcatMonitoringAgent", &windowsService{collector: c})
+	if err == nil {
+		return nil
 	}
 
-	if isInteractive {
-		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
-		defer stop()
-		return c.Run(ctx)
-	}
-
-	// Running as Windows Service SCM
-	return svc.Run("TomcatMonitoringAgent", &windowsService{collector: c})
+	// If not invoked by SCM (e.g. interactive CLI, SSH session, or --run-once), run console lifecycle
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
+	defer stop()
+	return c.Run(ctx)
 }
