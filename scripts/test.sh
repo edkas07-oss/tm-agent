@@ -6,6 +6,8 @@ PROJECT_ROOT="$(dirname "${SCRIPT_DIR}")"
 
 cd "${PROJECT_ROOT}"
 
+export PATH="${HOME}/.local/bin:${HOME}/.local/go/bin:${PATH}"
+
 echo "Running Go unit and component tests..."
 go test -v -race=false ./...
 

@@ -14,6 +14,8 @@ LDFLAGS="-s -w -X 'github.com/eddywiyatno/tm-agent/internal/buildinfo.Version=${
             -X 'github.com/eddywiyatno/tm-agent/internal/buildinfo.GitCommit=${GIT_COMMIT}' \
             -X 'github.com/eddywiyatno/tm-agent/internal/buildinfo.BuildDate=${BUILD_DATE}'"
 
+export PATH="${HOME}/.local/bin:${HOME}/.local/go/bin:${PATH}"
+
 echo "Building native binary..."
 mkdir -p bin
 CGO_ENABLED=0 go build -ldflags="${LDFLAGS}" -o bin/tm-agent ./cmd/tm-agent
