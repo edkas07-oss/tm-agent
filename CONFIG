@@ -1,0 +1,27 @@
+# Metadata non-secret deklaratif untuk tm-agent (Unified Event Collector Daemon).
+# File ini mendefinisikan konfigurasi default dan baseline spool retention.
+# Jangan menambahkan credential, certificate, atau secret material ke file ini.
+
+PLATFORM_NAME="tomcat-monitoring"
+
+# Identitas dan Target Workload
+TARGET_CONTAINER="${TARGET_CONTAINER:-tomcat-jmx-exporter}"
+TARGET_ID="${TARGET_ID:-lab/tomcat-01/default}"
+GENERATION=1
+
+# Kontrak Skema Spool
+SCHEMA_VERSION=1
+MAX_RECORD_BYTES=16384
+DEFAULT_SPOOL_DIR="${HOME}/.local/share/tomcat-monitoring/spool"
+
+# Container Engine Socket API (optional override: podman / docker)
+CONTAINER_ENGINE="${CONTAINER_ENGINE:-}"
+SOCKET_PATH="${SOCKET_PATH:-}"
+
+# Kebijakan Retensi & Kuota Spool (Zero Unbounded Spool)
+DEFAULT_MAX_SPOOL_AGE_HOURS=24
+DEFAULT_MAX_SPOOL_FILES=1000
+DEFAULT_STALE_TMP_AGE_MINUTES=60
+
+# Mode Eksekusi
+RUN_ONCE="${RUN_ONCE:-false}"

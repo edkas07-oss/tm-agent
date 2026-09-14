@@ -1,0 +1,26 @@
+# Template konfigurasi deklaratif untuk tm-agent di lingkungan produksi enterprise.
+# Salin berkas ini ke CONFIG atau muat via flag --config <path>.
+
+PLATFORM_NAME="tomcat-monitoring"
+
+# Identitas dan Target Workload
+TARGET_CONTAINER="tomcat-jmx-exporter"
+TARGET_ID="prod/app-server-01/default"
+GENERATION=1
+
+# Kontrak Skema Spool
+SCHEMA_VERSION=1
+MAX_RECORD_BYTES=16384
+DEFAULT_SPOOL_DIR="/var/lib/tomcat-monitoring/spool"
+
+# Container Engine Socket API (pilih podman atau docker, atau biarkan kosong untuk auto-discovery)
+CONTAINER_ENGINE=""
+SOCKET_PATH=""
+
+# Kebijakan Retensi & Kuota Spool
+DEFAULT_MAX_SPOOL_AGE_HOURS=24
+DEFAULT_MAX_SPOOL_FILES=1000
+DEFAULT_STALE_TMP_AGE_MINUTES=60
+
+# Mode Eksekusi
+RUN_ONCE="false"

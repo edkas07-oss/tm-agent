@@ -1,0 +1,19 @@
+[Unit]
+Description=Tomcat Monitoring Event Collector Daemon (tm-agent)
+Documentation=https://github.com/eddywiyatno/tm-agent
+After=default.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/tm-agent
+Restart=always
+RestartSec=5s
+
+# Hardening / Isolation
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=%h/.local/share/tomcat-monitoring/spool
+
+[Install]
+WantedBy=default.target
