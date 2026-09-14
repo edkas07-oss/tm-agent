@@ -1,8 +1,8 @@
 # Binaries
 /bin/
 /dist/
-tm-agent
-tm-agent.exe
+/tm-agent
+/tm-agent.exe
 
 # Go test / coverage outputs
 *.out
