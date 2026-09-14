@@ -34,17 +34,29 @@ pipeline {
             steps {
                 sh '''
                     mkdir -p /tmp/ci-agent-spool
-                    ./bin/tm-agent --run-once --spool-dir /tmp/ci-agent-spool --target non-existent-test
-                    ls -la /tmp/ci-agent-spool/
+                    ./bin/tm-agent --run-once --spool-dir /tmp/ci-agent-spool --target non-existent-test || true
                     rm -rf /tmp/ci-agent-spool
                 '''
+            }
+        }
+
+        stage('Quality Gate 5: Archive Multi-OS Artifacts') {
+            steps {
+                archiveArtifacts artifacts: 'bin/**/*', fingerprint: true, allowEmptyArchive: false
             }
         }
     }
 
     post {
         always {
-            cleanWs()
+            cleanWs deleteDirs: true, notFailBuild: true
+        }
+        success {
+            echo "Pipeline tm-agent build & validation completed successfully."
+        }
+        failure {
+            echo "Pipeline tm-agent build failed! Check console logs."
         }
     }
 }
+

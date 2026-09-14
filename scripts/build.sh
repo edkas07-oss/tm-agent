@@ -25,5 +25,12 @@ GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="${LDFLAGS}" -o bin/linu
 GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -ldflags="${LDFLAGS}" -o bin/linux_arm64/tm-agent ./cmd/tm-agent
 GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="${LDFLAGS}" -o bin/windows_amd64/tm-agent.exe ./cmd/tm-agent
 
+echo "4. Generating SHA-256 checksums manifest..."
+(
+    cd "${PROJECT_ROOT}/bin"
+    sha256sum linux_amd64/tm-agent linux_arm64/tm-agent windows_amd64/tm-agent.exe tm-agent > checksums.txt
+)
+
 echo "Build complete. Artifacts:"
-ls -lh bin/linux_amd64/tm-agent bin/linux_arm64/tm-agent bin/windows_amd64/tm-agent.exe bin/tm-agent
+ls -lh bin/linux_amd64/tm-agent bin/linux_arm64/tm-agent bin/windows_amd64/tm-agent.exe bin/tm-agent bin/checksums.txt
+

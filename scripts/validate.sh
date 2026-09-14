@@ -25,12 +25,24 @@ if [[ -n "${sensitive_matches}" ]]; then
     exit 1
 fi
 
-# 3. Check Go formatting
-unformatted="$(gofmt -l . || true)"
+# 3. Check Shell scripts syntax
+echo "Checking shell script syntax..."
+bash -n "${SCRIPT_DIR}"/*.sh
+bash -n "${PROJECT_ROOT}/CONFIG"
+bash -n "${PROJECT_ROOT}/CONFIG.example"
+
+# 4. Check Go formatting
+export PATH="${HOME}/.local/bin:${HOME}/.local/go/bin:${PATH}"
+unformatted="$(gofmt -l . 2>/dev/null | grep -v "/\.git/" || true)"
 if [[ -n "${unformatted}" ]]; then
-    echo "WARNING: Unformatted Go files detected:" >&2
+    echo "ERROR: Unformatted Go files detected:" >&2
     echo "${unformatted}" >&2
-    gofmt -w .
+    exit 1
 fi
 
+# 5. Check Go vet
+echo "Running go vet..."
+go vet ./...
+
 echo "Repository validation PASSED."
+
