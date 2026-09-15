@@ -60,10 +60,9 @@ loop:
 
 // RunService runs the collector daemon on Windows either as a console app (interactive/SSH) or as a Windows Service.
 func RunService(c *collector.Collector) error {
-	// Attempt running directly under Windows Service Control Manager (SCM)
-	err := svc.Run("TomcatMonitoringAgent", &windowsService{collector: c})
-	if err == nil {
-		return nil
+	isService, err := svc.IsWindowsService()
+	if err == nil && isService {
+		return svc.Run("TomcatMonitoringAgent", &windowsService{collector: c})
 	}
 
 	// If not invoked by SCM (e.g. interactive CLI, SSH session, or --run-once), run console lifecycle
