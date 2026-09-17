@@ -1,55 +1,118 @@
 # tm-agent — Unified Cross-Platform Event Collector Daemon
 
-`tm-agent` adalah agen pengumpul event insiden (*Event Collector Daemon*) mandiri berbasis Go yang beroperasi secara *real-time* dengan mengonsumsi *event stream* langsung dari **Container Engine Socket API** (Podman / Docker) dan menuliskan bukti kejadian ke direktori *spool* persisten secara atomik.
+[![Go Version](https://img.shields.io/badge/go-1.23+-00ADD8.svg)](https://go.dev)
+[![Cross-Platform](https://img.shields.io/badge/platform-linux%20%7C%20windows-lightgrey.svg)](README.md)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
-Kakas ini merealisasikan **TASK-TM-028 (TN-013)** berdasarkan keputusan arsitektur [TM-ADR-0027](file:///home/eddywiyatno/git/devops-handbook/docs/adr/tomcat-monitoring/adr-records/TM-ADR-0027.md) dan [TM-ADR-0008](file:///home/eddywiyatno/git/devops-handbook/docs/adr/tomcat-monitoring/adr-records/TM-ADR-0008.md).
+`tm-agent` is a standalone, lightweight, cross-platform **Event Collector Daemon** written in Go. It consumes real-time container lifecycle events directly from the **Container Engine Socket API** (Podman / Docker) and atomically emits schema-compliant JSON evidence records into a persistent host spool directory.
 
----
-
-## 🚀 Fitur Utama
-
-- **Single Static Binary (`CGO_ENABLED=0`):** Beroperasi mandiri tanpa dependensi runtime eksternal (tanpa Python, Bash, atau Linux coreutils).
-- **Direct Socket Event Streaming:** Berlangganan langsung ke endpoint `GET /events` (Docker) atau `GET /v4.0.0/libpod/events` (Podman) via Unix Domain Socket, Windows Named Pipe (`\\.\pipe\docker_engine`), atau TCP.
-- **Kepatuhan Kontrak Skema Kanonikal:** Memformat rekam bukti insiden (`container_state`, `runtime_oom`, `collector_status`) 100% identik dengan `event-record-v1.schema.json`.
-- **Penulisan Atomik & Isolasi Izin:** Menulis ke berkas `.tmp` dengan izin `0600` sebelum melakukan `rename` atomik ke `.json` pada direktori spool berizin `0700`.
-- **FIFO Spool Retention & Quota Guard:** Pemangkasan otomatis berkas `.json` (> 24 jam), pembersihan berkas `.tmp` terlantar (> 60 menit), dan penegakan kuota FIFO jika jumlah berkas > 1000.
-- **Cross-Platform Execution:** Mendukung eksekusi sebagai daemon foreground/systemd di Linux dan Windows Service / console runner di Windows.
+It fulfills **TASK-TM-028 (TN-013)** and adheres to architectural standards defined in [TM-ADR-0027](file:///home/eddywiyatno/git/devops-handbook/docs/adr/tomcat-monitoring/adr-records/TM-ADR-0027.md) and [TM-ADR-0008](file:///home/eddywiyatno/git/devops-handbook/docs/adr/tomcat-monitoring/adr-records/TM-ADR-0008.md).
 
 ---
 
-## 📦 Penggunaan CLI
+## 🏛️ Architecture & Stream Pipeline
+
+```mermaid
+flowchart LR
+    subgraph ENGINE["Container Engine Socket"]
+        SOCK["Unix Socket / Windows Named Pipe"]
+        STREAM["GET /events (Docker) or /v4.0.0/libpod/events (Podman)"]
+        SOCK --> STREAM
+    end
+
+    subgraph AGENT["tm-agent Daemon (Linux / Windows)"]
+        STREAM ==>|Streaming HTTP/JSON| LISTENER["Event Stream Consumer"]
+        LISTENER --> FORMATTER["Canonical Schema Formatter<br/>(event-record-v1.schema.json)"]
+        FORMATTER --> PRUNER["Autonomous FIFO Pruning<br/>(24h Max Age / 1000 File Cap)"]
+        PRUNER --> WRITER["Atomic 0600 Writer (.tmp -> .json)"]
+    end
+
+    subgraph SPOOL["Host Spool (0700)"]
+        WRITER ==> SPOOL_DIR["/opt/tm-home/spool/ (Linux)<br/>C:\\tm-home\\spool\\ (Windows)"]
+    end
+```
+
+---
+
+## 🚀 Key Capabilities
+
+- **Zero External Runtime Dependencies:** Compiled as a single static binary (`CGO_ENABLED=0`) with zero external C-library or interpreter requirements.
+- **Direct Engine Socket Streaming:** Connects natively to Docker (`GET /events`) or Podman (`GET /v4.0.0/libpod/events`) via Unix Domain Sockets (`/run/user/1000/podman/podman.sock`, `/var/run/docker.sock`), Windows Named Pipes (`\\.\pipe\docker_engine`), or TCP mTLS.
+- **Strict Schema Contract:** Emits `container_state`, `runtime_oom`, and `collector_status` records conforming to [`event-record-v1.schema.json`](../tomcat-diagnostic-event-collector/config/schemas/event-record-v1.schema.json).
+- **Atomic File Serialization:** Writes records with `0600` permissions (`-rw-------`) to temporary files before executing an atomic rename (`.tmp` $\rightarrow$ `.json`) to eliminate read race conditions.
+- **Autonomous FIFO Spool Retention:**
+  - Auto-prunes `.json` records older than 24 hours.
+  - Removes orphaned `.tmp` files older than 60 minutes.
+  - Enforces a maximum capacity of 1,000 files via FIFO eviction.
+- **Multi-OS Native Execution:** Runs as a systemd user daemon on Linux or a background service/console runner on Windows Server.
+
+---
+
+## 📦 CLI Usage & Flags
 
 ```bash
-# Menjalankan agen secara foreground (listening to event stream)
+# Run agent in foreground (streaming container events)
 tm-agent
 
-# Mengambil one-shot snapshot dan keluar
+# Capture a one-shot container status snapshot and exit immediately
 tm-agent --run-once
 
-# Menentukan target container dan spool directory secara eksplisit
-tm-agent --target tomcat-jmx-exporter --target-id lab/tomcat-01/default --spool-dir /var/lib/monitoring/spool
+# Specify target container and persistent spool directory explicitly
+tm-agent --target tomcat-jmx-exporter --target-id lab/tomcat-01/default --spool-dir /opt/tm-home/spool
 
-# Menentukan engine dan socket path kustom
+# Specify custom container engine and socket path
 tm-agent --engine podman --socket /run/user/1000/podman/podman.sock
 
-# Menampilkan informasi versi biner
+# Display version information
 tm-agent --version
 ```
 
 ---
 
-## 🛠️ Kompilasi & Pengujian
+## 🛠️ Build & Validation
 
 ```bash
-# Kompilasi native binary
+# Build native binary
 make build
 
-# Kompilasi silang (Linux amd64, Linux arm64, Windows amd64)
+# Cross-compile full matrix (Linux amd64, Linux arm64, Windows amd64)
 make build-all
 
-# Menjalankan seluruh pengujian unit
+# Execute Go unit test suite
 make test
 
-# Menjalankan validasi tata kelola repositori
+# Validate repository layout and governance rules
 make validate
 ```
+
+---
+
+## 📂 Repository Structure
+
+```text
+tm-agent/
+├── AGENTS.md                  Agent governance and coding rules
+├── CONFIG                     Metadata and default operational thresholds
+├── CONFIG.example             Enterprise configuration template
+├── Makefile                   Build, cross-compilation, and test automation
+├── PROJECT                    Script-readable project identifier
+├── README.md                  Technical documentation
+├── VERSION                    Release version
+├── cmd/
+│   └── tm-agent/              Main CLI entrypoint
+├── internal/
+│   ├── config/                Configuration parser
+│   ├── engine/                Socket stream consumer & Docker/Podman adapters
+│   ├── spool/                 Atomic writer and FIFO retention manager
+│   └── validator/             Schema validator
+├── systemd/                   Systemd service unit definitions
+└── pkg/                       Shared utility packages
+```
+
+---
+
+## 👤 Author & Maintainer
+
+- **Lead Engineer & Architect:** Eddy Wiyatno (<edkas07@gmail.com>)
+- **Role:** Senior DevOps & Reliability Engineer
+- **Project:** Tomcat Monitoring & Diagnostics Platform
