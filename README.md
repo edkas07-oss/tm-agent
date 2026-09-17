@@ -1,12 +1,24 @@
-# tm-agent — Unified Cross-Platform Event Collector Daemon
+# 📦 tm-agent — Unified Cross-Platform Event Collector Daemon
 
 [![Go Version](https://img.shields.io/badge/go-1.23+-00ADD8.svg)](https://go.dev)
-[![Cross-Platform](https://img.shields.io/badge/platform-linux%20%7C%20windows-lightgrey.svg)](README.md)
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+[![Cross-Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20Windows-lightgrey.svg)](README.md)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![Security](https://img.shields.io/badge/Security-Rootless_0700_Spool-brightgreen.svg)](CONFIG)
 
 `tm-agent` is a standalone, lightweight, cross-platform **Event Collector Daemon** written in Go. It consumes real-time container lifecycle events directly from the **Container Engine Socket API** (Podman / Docker) and atomically emits schema-compliant JSON evidence records into a persistent host spool directory.
 
 It fulfills **TASK-TM-028 (TN-013)** and adheres to architectural standards defined in [TM-ADR-0027](file:///home/eddywiyatno/git/devops-handbook/docs/adr/tomcat-monitoring/adr-records/TM-ADR-0027.md) and [TM-ADR-0008](file:///home/eddywiyatno/git/devops-handbook/docs/adr/tomcat-monitoring/adr-records/TM-ADR-0008.md).
+
+---
+
+## 📑 Table of Contents
+
+- [🏛️ Architecture & Stream Pipeline](#️-architecture--stream-pipeline)
+- [🚀 Key Capabilities](#-key-capabilities)
+- [📦 CLI Usage & Flags](#-cli-usage--flags)
+- [🛠️ Build & Validation](#️-build--validation)
+- [📂 Repository Structure](#-repository-structure)
+- [📄 License, Ownership & Disclaimer](#-license-ownership--disclaimer)
 
 ---
 
@@ -94,6 +106,7 @@ tm-agent/
 ├── AGENTS.md                  Agent governance and coding rules
 ├── CONFIG                     Metadata and default operational thresholds
 ├── CONFIG.example             Enterprise configuration template
+├── LICENSE                    Apache License 2.0
 ├── Makefile                   Build, cross-compilation, and test automation
 ├── PROJECT                    Script-readable project identifier
 ├── README.md                  Technical documentation
@@ -111,8 +124,14 @@ tm-agent/
 
 ---
 
-## 👤 Author & Maintainer
+## 📄 License, Ownership & Disclaimer
 
-- **Lead Engineer & Architect:** Eddy Wiyatno (<edkas07@gmail.com>)
-- **Role:** Senior DevOps & Reliability Engineer
-- **Project:** Tomcat Monitoring & Diagnostics Platform
+### 👤 Author & Ownership
+This repository, along with its associated architectures, automation components, and codebases, is designed, authored, and maintained by **Eddy Wiyatno** ([@edkas07-oss](https://github.com/edkas07-oss)).
+
+### ⚖️ License
+This project is licensed under the [Apache License 2.0](LICENSE) - see the [LICENSE](LICENSE) file for complete terms and conditions.
+
+### 🛡️ Research & Development Disclaimer
+> [!NOTE]
+> All research, development, architectural design, prototyping, test fixtures, and validation suites in this repository were conducted and verified exclusively within **independent, personal laboratory environments** using personal hardware, network infrastructure, and self-hosted tooling. No confidential corporate assets, proprietary production data, or third-party enterprise infrastructure were utilized in the creation or publication of this project.
