@@ -52,26 +52,27 @@ In autonomous observability and container incident response pipelines, capturing
 
 ```mermaid
 flowchart LR
-    subgraph ENGINE["Container Engine Socket"]
-        SOCK["Unix Socket / Windows Named Pipe / TCP"]
-        STREAM["GET /events (Docker) or /libpod/events (Podman)"]
-        SOCK --> STREAM
+    subgraph ENGINE["1. Container Engine Socket"]
+        direction LR
+        SOCK["Unix Socket / Named Pipe / TCP"] --> STREAM["GET /events Stream"]
     end
 
-    subgraph AGENT["tm-agent Daemon (Linux / Windows)"]
-        STREAM ==>|Streaming HTTP/JSON| LISTENER["Event Stream Consumer"]
-        LISTENER --> FORMATTER["Canonical Schema Formatter<br/>(event-record-v1.schema.json)"]
-        FORMATTER --> PRUNER["Autonomous FIFO Pruning<br/>(24h Max Age / 1000 File Cap)"]
-        PRUNER --> WRITER["Atomic 0600 Writer (.tmp to .json)"]
+    subgraph AGENT["2. tm-agent Stream Pipeline"]
+        direction LR
+        LISTENER["Stream Consumer"] --> FORMATTER["Schema Formatter"] --> PRUNER["FIFO Pruner"] --> WRITER["Atomic Writer (0600)"]
     end
 
-    subgraph SPOOL["Host Spool Directory (0700)"]
-        WRITER ==> SPOOL_DIR["/opt/tm-home/spool (Linux)<br/>C:/tm-home/spool (Windows)"]
+    subgraph SPOOL["3. Host Spool (0700)"]
+        SPOOL_DIR["/opt/tm-home/spool (Linux)<br/>C:/tm-home/spool (Windows)"]
     end
 
-    subgraph CONSUMER["Autonomous AI Diagnostics"]
-        SPOOL_DIR ==>|Read-Only Mount| DS["Tomcat Diagnostic Service"]
+    subgraph CONSUMER["4. AI Diagnostics"]
+        DS["Tomcat Diagnostic Service"]
     end
+
+    STREAM ==>|HTTP/JSON Stream| LISTENER
+    WRITER ==>|Atomic .tmp to .json| SPOOL_DIR
+    SPOOL_DIR ==>|Read-Only Mount| DS
 ```
 
 ### 🎯 Core Advantages
