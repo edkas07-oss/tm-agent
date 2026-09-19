@@ -54,7 +54,7 @@ In autonomous observability and container incident response pipelines, capturing
 flowchart LR
     subgraph ENGINE["Container Engine Socket"]
         SOCK["Unix Socket / Windows Named Pipe / TCP"]
-        STREAM["GET /events (Docker) or /v4.0.0/libpod/events (Podman)"]
+        STREAM["GET /events (Docker) or /libpod/events (Podman)"]
         SOCK --> STREAM
     end
 
@@ -62,15 +62,15 @@ flowchart LR
         STREAM ==>|Streaming HTTP/JSON| LISTENER["Event Stream Consumer"]
         LISTENER --> FORMATTER["Canonical Schema Formatter<br/>(event-record-v1.schema.json)"]
         FORMATTER --> PRUNER["Autonomous FIFO Pruning<br/>(24h Max Age / 1000 File Cap)"]
-        PRUNER --> WRITER["Atomic 0600 Writer (.tmp -> .json)"]
+        PRUNER --> WRITER["Atomic 0600 Writer (.tmp to .json)"]
     end
 
     subgraph SPOOL["Host Spool Directory (0700)"]
-        WRITER ==> SPOOL_DIR["/opt/tm-home/spool/ (Linux)<br/>C:\\tm-home\\spool\\ (Windows)"]
+        WRITER ==> SPOOL_DIR["/opt/tm-home/spool (Linux)<br/>C:/tm-home/spool (Windows)"]
     end
 
     subgraph CONSUMER["Autonomous AI Diagnostics"]
-        SPOOL_DIR ==>|Read-Only Mount (ro,z)| DS["Tomcat Diagnostic Service"]
+        SPOOL_DIR ==>|Read-Only Mount| DS["Tomcat Diagnostic Service"]
     end
 ```
 
