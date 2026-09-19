@@ -87,10 +87,16 @@ flowchart LR
 
 ## 🚀 Installation & Compilation
 
-For complete build prerequisites, cross-compilation matrix details, systemd daemon registration, and Windows background service configuration, please refer to the dedicated [**`INSTALL.md`**](INSTALL.md) guide.
+### Build from Source
 
 ```bash
-# Quick build and installation to ~/.local/bin
+# Build native binary for current host architecture
+make build
+
+# Cross-compile full matrix (Linux amd64, Linux arm64, Windows amd64)
+make build-all
+
+# Install binary to ~/.local/bin
 make install
 ```
 
